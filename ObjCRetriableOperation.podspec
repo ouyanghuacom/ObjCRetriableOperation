@@ -3,7 +3,7 @@ Pod::Spec.new do |spec|
     spec.version  = '1.0.0'
     spec.license  = 'MIT'
     spec.summary  = 'Make asynchronous components retriable'
-    spec.homepage = 'https://github.com/ouyanghua.com/ObjCRetriableOperation'
+    spec.homepage = 'https://github.com/ouyanghuacom/ObjCRetriableOperation'
     spec.author   = { 'ouyanghuacom' => 'ouyanghua.com@gmail.com' }
     spec.source   = { :git => 'https://github.com/ouyanghuacom/ObjCRetriableOperation.git',:tag => "#{spec.version}" }
     spec.description = 'Make asynchronous components retriable.'
