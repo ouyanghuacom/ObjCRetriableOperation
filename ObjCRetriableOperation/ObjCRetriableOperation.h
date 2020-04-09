@@ -18,6 +18,9 @@ FOUNDATION_EXPORT const unsigned char ObjCRetriableOperationVersionString[];
 
 NS_ASSUME_NONNULL_BEGIN
 
+
+FOUNDATION_EXPORT NSTimeInterval OBJC_RETRIABLE_NEVER;
+
 @interface ObjCRetriableOperation : NSOperation
 
 + (instancetype)operationWithCompletion:(void(^ _Nullable)(id _Nullable response,NSError * _Nullable latestError))completion

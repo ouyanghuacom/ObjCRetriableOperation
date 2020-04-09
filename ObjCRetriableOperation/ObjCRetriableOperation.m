@@ -8,6 +8,7 @@
 
 #import "ObjCRetriableOperation.h"
 
+NSTimeInterval OBJC_RETRIABLE_NEVER = DBL_MAX;
 
 #if TARGET_OS_IOS || TARGET_OS_TV
 #define RETRIABLE_UIKIT 1
@@ -134,7 +135,7 @@ static inline void retriable_log(NSString *log){
             return;
         }
         NSTimeInterval interval=self.mRetryAfterBlock(++self.currentRetryTime,self.latestError);
-        if (interval==0) {
+        if (interval==OBJC_RETRIABLE_NEVER) {
             [self complete];
             [self.lock unlock];
             return;
@@ -149,6 +150,12 @@ static inline void retriable_log(NSString *log){
             self.timer=nil;
         }
         RetryLog(@"%@ will retry after: %.2f\nlatest error: %@",self,interval,self.latestError);
+        if (interval == 0){
+            [self.lock lock];
+            [self startTask];
+            [self.lock unlock];
+            return;
+        }
         self.timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_main_queue());
         dispatch_source_set_timer(self.timer, dispatch_walltime(DISPATCH_TIME_NOW, interval*NSEC_PER_SEC), INT32_MAX * NSEC_PER_SEC, 0 * NSEC_PER_SEC);
         dispatch_source_set_event_handler(self.timer, ^{
@@ -227,38 +234,38 @@ static inline void retriable_log(NSString *log){
 #if RETRIABLE_UIKIT
     if (!self.executing||self.backgroundTaskId==UIBackgroundTaskInvalid){
 #else
-    if (!self.executing){
+        if (!self.executing){
 #endif
+            [self.lock unlock];
+            return;
+        }
+        if (isPaused) [self cancelTask];
+        else [self startTask];
         [self.lock unlock];
-        return;
     }
-    if (isPaused) [self cancelTask];
-    else [self startTask];
-    [self.lock unlock];
-}
-
-- (void)set_isExecuting:(BOOL)_isExecuting{
-    [self willChangeValueForKey:@"isExecuting"];
-    __isExecuting=_isExecuting;
-    [self didChangeValueForKey:@"isExecuting"];
-}
-
-- (void)set_isFinished:(BOOL)_isFinished{
-    [self willChangeValueForKey:@"isFinished"];
-    __isFinished=_isFinished;
-    [self didChangeValueForKey:@"isFinished"];
-}
-
-- (BOOL)isExecuting{
-    return __isExecuting;
-}
-
-- (BOOL)isFinished{
-    return __isFinished;
-}
-
-- (BOOL)isAsynchronous{
-    return YES;
-}
-
-@end
+    
+    - (void)set_isExecuting:(BOOL)_isExecuting{
+        [self willChangeValueForKey:@"isExecuting"];
+        __isExecuting=_isExecuting;
+        [self didChangeValueForKey:@"isExecuting"];
+    }
+    
+    - (void)set_isFinished:(BOOL)_isFinished{
+        [self willChangeValueForKey:@"isFinished"];
+        __isFinished=_isFinished;
+        [self didChangeValueForKey:@"isFinished"];
+    }
+    
+    - (BOOL)isExecuting{
+        return __isExecuting;
+    }
+    
+    - (BOOL)isFinished{
+        return __isFinished;
+    }
+    
+    - (BOOL)isAsynchronous{
+        return YES;
+    }
+    
+    @end
