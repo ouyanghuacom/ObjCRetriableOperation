@@ -26,12 +26,12 @@ FOUNDATION_EXPORT NSTimeInterval OBJC_RETRIABLE_NEVER;
 + (instancetype)operationWithCompletion:(void(^ _Nullable)(id _Nullable response,NSError * _Nullable latestError))completion
                              retryAfter:(NSTimeInterval(^ _Nullable)(NSInteger currentRetryTime,NSError * _Nullable latestError))retryAfter
                                   start:(void(^_Nonnull)(void(^ _Nonnull callback)(id _Nullable response,NSError * _Nullable error)))start
-                                 cancel:(void(^_Nonnull)(void))cancel;
+                                 cancel:(NSError *(^_Nonnull)(void))cancel;
 
 - (instancetype)initWithCompletion:(void(^ _Nullable)(id _Nullable response,NSError * _Nullable latestError))completion
                         retryAfter:(NSTimeInterval(^ _Nullable)(NSInteger currentRetryTime,NSError * _Nullable latestError))retryAfter
                              start:(void(^_Nonnull)(void(^ _Nonnull callback)(id _Nullable response,NSError * _Nullable error)))start
-                            cancel:(void(^_Nonnull)(void))cancel NS_DESIGNATED_INITIALIZER;
+                            cancel:(NSError *(^_Nonnull)(void))cancel NS_DESIGNATED_INITIALIZER;
 
 - (instancetype)init NS_UNAVAILABLE;
 /**

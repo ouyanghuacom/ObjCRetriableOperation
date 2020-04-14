@@ -34,7 +34,7 @@ static inline void retriable_log(NSString *log){
 @property (nonatomic,strong) void(^mCompletionBlock) (id response,NSError *latestError);
 @property (nonatomic,strong) NSTimeInterval (^mRetryAfterBlock) (NSInteger currentRetryTime,NSError *latestError);
 @property (nonatomic,strong) void(^mStartBlock)(void(^callback) (id response,NSError *error));
-@property (nonatomic,strong) void(^mCancelBlock) (void);
+@property (nonatomic,strong) NSError *(^mCancelBlock) (void);
 
 @property (nonatomic,assign) NSInteger                  currentRetryTime;
 @property (nonatomic,strong) NSError                    *latestError;
@@ -65,14 +65,14 @@ static inline void retriable_log(NSString *log){
 + (instancetype)operationWithCompletion:(void(^ _Nullable)(id _Nullable response,NSError * _Nullable latestError))completion
                              retryAfter:(NSTimeInterval(^ _Nullable)(NSInteger currentRetryTime,NSError * _Nullable latestError))retryAfter
                                   start:(void(^_Nonnull)(void(^ _Nonnull callback)(id _Nullable response,NSError * _Nullable error)))start
-                                 cancel:(void(^_Nonnull)(void))cancel{
+                                 cancel:(NSError *(^_Nonnull)(void))cancel{
     return [[self alloc]initWithCompletion:completion retryAfter:retryAfter start:start cancel:cancel];
 }
 
 - (instancetype)initWithCompletion:(void(^)(id response,NSError *latestError))completion
                         retryAfter:(NSTimeInterval(^)(NSInteger currentRetryTime,NSError *latestError))retryAfter
                              start:(void(^)(void(^callback)(id response,NSError *error)))start
-                            cancel:(void(^)(void))cancel{
+                            cancel:(NSError *(^)(void))cancel{
     self=[super init];
     if (!self) return nil;
     self.lock=[[NSRecursiveLock alloc]init];
@@ -171,11 +171,12 @@ static inline void retriable_log(NSString *log){
     });
 }
 
-- (void)cancelTask{
-    self.mCancelBlock();
-    if (!self.timer) return;
-    dispatch_source_cancel(self.timer);
-    self.timer=nil;
+- (NSError *)cancelTask{
+    if (self.timer){
+        dispatch_source_cancel(self.timer);
+        self.timer=nil;
+    }
+    return self.mCancelBlock();
 }
 
 - (void)complete{
