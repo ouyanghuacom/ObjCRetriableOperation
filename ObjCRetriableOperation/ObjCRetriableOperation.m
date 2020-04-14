@@ -99,7 +99,7 @@ static inline void retriable_log(NSString *log){
         return;
     }
     [super cancel];
-    [self cancelTask];
+    self.latestError = [self cancelTask];
     [self complete];
     [self.lock unlock];
 }
